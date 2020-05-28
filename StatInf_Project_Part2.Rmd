@@ -1,0 +1,129 @@
+---
+title: "Statistical Inference Project Part 2"
+author: "J.E. Panzik"
+date: "5/27/2020"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+# Overview
+This report aims to analyze the ToothGrowth data in the R datasets package. Per the course project instructions, the following items should occur:
+
+1. Load the ToothGrowth data and perform some basic exploratory data analyses
+2. Provide a basic summary of the data.
+3. Use confidence intervals and/or hypothesis tests to compare tooth growth by supp and dose (only use the techniques from class, even if there are other approaches worth considering).
+4. State your conclusions and the assumptions needed for your conclusions.
+
+**The analysis below comes to the conclusion that the type of supplement given IS NOT statistically significant, but the dosage of supplement IS statistically significant in the tooth length of guinea pigs.**
+
+# Data: Description and Exploratory Plots
+The response is the length of odontoblasts (cells responsible for tooth growth) in 60 guinea pigs. Each animal received one of three dose levels of vitamin C (0.5, 1, and 2 mg/day) by one of two delivery methods, orange juice or ascorbic acid (a form of vitamin C and coded as VC).
+
+```{r load}
+#Load the datasets and open ToothGrowth data
+library(datasets)
+data(ToothGrowth)
+```
+
+The following code displays the structure of the data and how many incomplete entries exist.
+```{r features}
+str(ToothGrowth)
+sum(!complete.cases(ToothGrowth))
+```
+
+The following plots show a quick visual behavior of tooth length of the subject guinea pigs related to the supplements given and the doses given.
+```{r expPlots, fig.width=7, fig.height=3}
+library(ggplot2); library(gridExtra)
+ToothGrowth$dose <- as.factor(ToothGrowth$dose)
+ToothGrowth$supp <- as.factor(ToothGrowth$supp)
+#First plot of tooth length vs supplement
+p1 <- ggplot(ToothGrowth, aes(x=supp, y=len, fill=supp)) +
+      geom_boxplot() +  ggtitle("Tooth Length Based on Supplement") +
+      xlab("Delivery Supplement") + ylab("Tooth Length")
+#Create second plot of tooth length vs dose
+p2 <- ggplot(ToothGrowth, aes(x=dose, y=len,fill=dose)) +
+      geom_boxplot() +  ggtitle("Tooth Length Based on Dose") +
+      xlab("Dose (mg per day)") + ylab("Tooth Length")
+#Combine both plots
+grid.arrange(p1, p2, nrow=1)
+```
+
+# Hypothesis Testing: Impact of Supplement
+For all hypothesis testing, data is analyzed using a t test and only the t statistic, p value, and confidence interval are displayed.  
+*Null Hypothesis:* The type of supplement **does not** impact tooth growth.  
+*Alternate Hypothesis:* The type of supplement **does** impact tooth growth.  
+```{r }
+tSupp <- t.test(len ~ supp, data = ToothGrowth)$statistic
+pSupp <- t.test(len ~ supp, data = ToothGrowth)$p.value
+confSupp <- t.test(len ~ supp, data = ToothGrowth)$conf.int
+```
+*Test Statistic:* `r tSupp`  
+*Confidence Interval:* `r confSupp`  
+*p Value:* `r pSupp`
+
+# Hypothesis Testing: Impact of Dose
+*Null Hypothesis:* The dose amount **does not** impact tooth growth.  
+*Alternate Hypothesis:* The dose amount **does** impact tooth growth.  
+To test the significance between each dose, the dataset is broken up into subsets based on the two dosages being compared.
+
+**Dosage: 0.5 mg per day vs. 1 mg per day**  
+```{r }
+ToothGrowth1 <- subset(ToothGrowth, ToothGrowth$dose %in% c(0.5,1))
+tDose1 <- t.test(len ~ dose, data = ToothGrowth1)$statistic
+pDose1 <- t.test(len ~ dose, data = ToothGrowth1)$p.value
+confDose1 <- t.test(len ~ dose, data = ToothGrowth1)$conf.int
+```
+*Test Statistic:* `r tDose1`  
+*Confidence Interval:* `r confDose1`  
+*p Value:* `r pDose1`
+
+**Dosage: 0.5 mg per day vs. 2 mg per day**  
+```{r }
+ToothGrowth2 <- subset(ToothGrowth, ToothGrowth$dose %in% c(0.5,2))
+tDose2 <- t.test(len ~ dose, data = ToothGrowth2)$statistic
+pDose2 <- t.test(len ~ dose, data = ToothGrowth2)$p.value
+confDose2 <- t.test(len ~ dose, data = ToothGrowth2)$conf.int
+```
+*Test Statistic:* `r tDose2`  
+*Confidence Interval:* `r confDose2`  
+*p Value:* `r pDose2`
+
+**Dosage: 1 mg per day vs. 2 mg per day**  
+```{r }
+ToothGrowth3 <- subset(ToothGrowth, ToothGrowth$dose %in% c(1,2))
+tDose3 <- t.test(len ~ dose, data = ToothGrowth3)$statistic
+pDose3 <- t.test(len ~ dose, data = ToothGrowth3)$p.value
+confDose3 <- t.test(len ~ dose, data = ToothGrowth3)$conf.int
+```
+*Test Statistic:* `r tDose3`  
+*Confidence Interval:* `r confDose3`  
+*p Value:* `r pDose3`
+
+# Conclusions
+**Supplements**  
+Based on the t test applied to variation of tooth length between supplements the type of supplement *does not* have a statistically significant difference. Because the p value: `r pSupp`>0.5, and the confidence interval: (`r confSupp`) contains 0, we cannot reject the null hypothesis.
+
+**Dosage**  
+Based on the t test applied to variation of tooth length between dosages 0.5 and 1, the dosage amount *does* have a statistically significant difference. Because the p value: `r pDose1`<0.5, and the confidence interval: (`r confDose1`) does not contain 0, we reject the null hypothesis.
+
+Based on the t test applied to variation of tooth length between dosages 0.5 and 2, the dosage amount *does* have a statistically significant difference. Because the p value: `r pDose2`<0.5, and the confidence interval: (`r confDose2`) does not contain 0, we reject the null hypothesis.
+
+Based on the t test applied to variation of tooth length between dosages 1 and 2, the dosage amount *does* have a statistically significant difference. Because the p value: `r pDose3`<0.5, and the confidence interval: (`r confDose3`) does not contain 0, we reject the null hypothesis.
+
+\newpage
+
+# Supplemental Material
+Though the analysis above only compared all the doses of supplements to each other. There may be a different relation between each supplement of the same dose. The analysis does not explore this further, but displays the posibility.
+```{r expPlots2, fig.width=7, fig.height=6}
+#Create plot for tooth length vs dose separated by supplement
+p3 <- ggplot(ToothGrowth, aes(x=dose, y=len, fill=dose)) +
+      geom_boxplot() +  ggtitle("Tooth Length Based on Dose by Supplement") +
+      xlab("Dose (mg per day)") + ylab("Tooth Length") +facet_grid(~supp)
+#Create plot for tooth length vs supplement separated by dosage
+p4 <- ggplot(ToothGrowth, aes(x=supp, y=len, fill=supp)) +
+      geom_boxplot() +  ggtitle("Tooth Length Based on Supplement by Dose") +
+      xlab("Delivery Supplement") + ylab("Tooth Length") +facet_grid(~dose)
+#Show plots as 1 column grid
+grid.arrange(p3, p4, ncol=1)
+```
